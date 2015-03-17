@@ -1,0 +1,29 @@
+{
+  "name": "game-levels",
+  "version": "0.0.0",
+  "authors": [
+    "Anonymous <anonymous@example.com>"
+  ],
+  "description": "Element providing solution to no problem in particular.",
+  "keywords": [
+    "web-component",
+    "web-components",
+    "polymer",
+    "seed"
+  ],
+  "main": "game-levels.html",
+  "license": "MIT",
+  "homepage": "https://github.com/<USERNAME>/game-levels/",
+  "ignore": [
+    "/.*",
+    "/tests/"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#^0.5.5",
+    "core-icon": "Polymer/core-icon#~0.5.5",
+    "paper-button": "Polymer/paper-button#~0.5.5"
+  },
+  "devDependencies": {
+    "web-component-tester": "Polymer/web-component-tester#^2.0.5"
+  }
+}

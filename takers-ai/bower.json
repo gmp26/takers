@@ -1,0 +1,30 @@
+{
+  "name": "takers-ai",
+  "version": "0.0.0",
+  "authors": [
+    "Anonymous <anonymous@example.com>"
+  ],
+  "description": "Element providing solution to no problem in particular.",
+  "keywords": [
+    "web-component",
+    "web-components",
+    "polymer",
+    "seed"
+  ],
+  "main": "takers-ai.html",
+  "license": "MIT",
+  "homepage": "https://github.com/<USERNAME>/takers-ai/",
+  "ignore": [
+    "/.*",
+    "/tests/"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#^0.5.5",
+    "paper-checkbox": "Polymer/paper-checkbox#~0.5.5",
+    "core-label": "Polymer/core-label#~0.5.5",
+    "core-pages": "Polymer/core-pages#~0.5.5"
+  },
+  "devDependencies": {
+    "web-component-tester": "Polymer/web-component-tester#^2.0.5"
+  }
+}

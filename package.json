@@ -1,0 +1,36 @@
+{
+  "name": "takers-blockly",
+  "version": "1.0.0",
+  "description": "Investigating 'Takers' with a game AI ",
+  "main": "index.html",
+  "directories": {
+    "doc": "docs"
+  },
+  "dependencies": {
+    "gulp-vulcanize": "^5.0.0"
+  },
+  "devDependencies": {
+    "gulp-if": "^1.2.5",
+    "gulp-load-plugins": "^0.8.1",
+    "gulp-size": "^1.2.1",
+    "gulp-uglify": "^1.1.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mathsorg/takers-blockly.git"
+  },
+  "keywords": [
+    "game",
+    "ai",
+    "blockly"
+  ],
+  "author": "Mike Pearson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mathsorg/takers-blockly/issues"
+  },
+  "homepage": "https://github.com/mathsorg/takers-blockly"
+}

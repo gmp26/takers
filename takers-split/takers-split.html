@@ -1,0 +1,302 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../components/polymer/polymer.html">
+<link rel="import" href="../components/core-signals/core-signals.html">
+<link rel="import" href="../components/core-splitter/core-splitter.html">
+<link rel="import" href="../components/core-drawer-panel/core-drawer-panel.html">
+<link rel="import" href="../components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../components/paper-button/paper-button.html">
+
+<!-- local elements -->
+
+<link rel="import" href="../blockly-element/blockly-element.html">
+<link rel="import" href="../takers-game/takers-game.html">
+<link rel="import" href="../takers-ai/takers-ai.html">
+<link rel="import" href="../run-control/run-control.html">
+
+<!--
+Element providing solution to no problem in particular.
+
+##### Example
+
+    <takers-split></takers-split>
+
+@element takers-split
+@blurb Element providing solution to no problem in particular.
+@status alpha
+@homepage http://gmp26.github.io/takers-split
+-->
+<polymer-element name="takers-split" attributes="goal stepping stepInterval">
+
+
+  <template>
+
+    <!-- <link rel="stylesheet" href="takers-split.css"> -->
+    <style>
+       :host {
+        font-family: 'RobotoDraft', sans-serif;
+        background-color: rgba(213, 87,187, 0.33);
+      }
+      :host .game {
+        height: 100vh;
+        overflow: auto;
+        width: 300px;
+      }
+      :host .ai {
+        height: 100vh;
+        overflow: auto;
+      }
+/*       .hidden {
+        display: none;
+      } */
+      :host core-drawer-panel #drawer {
+          color: #ffffff;
+          opacity: 1;
+      }
+
+      :host core-splitter {
+        width: 20px;
+        background-color: #C9C2E5;
+        -webkit-transition:width .25s, background-color 250ms, -webkit-transform 2s;
+        transition:width .25s, background-color 250ms, transform 2s;
+      }
+
+      :host core-splitter:hover {
+        width: 50px;
+        background-color: #EF8F79;
+      }
+
+      :host .relative {
+        position: relative;
+      }
+      
+      .dialog {
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        border-radius: 10px;
+        overflow: hidden;
+        background: rgb(255, 227, 212);
+        margin: 10px;
+        padding: 30px 40px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+        max-width: 600px;
+      }
+
+      .dialog .coloured {
+        background: #4285f4;
+        color: #fff;
+        float: right;
+      }
+    </style>
+
+    <core-signals id="signals"></core-signals>
+
+    <div class="relative">
+      <div main horizontal layout>
+        <takers-game id="game" class="game" goal="{{goal}}"></takers-game>
+        <core-splitter direction="left"></core-splitter>
+        <takers-ai id="ai" class="ai" total="{{_total}}" goal="{{goal}}" flex></takers-ai>
+      </div>
+      <run-control id="runControl" 
+        stopped="{{stepping}}" 
+        stepInterval="{{stepInterval}}"
+        selected="0">
+      </run-control>
+
+      <core-overlay id="endgameDialog" class="dialog" backdrop opened="false">
+          <h1>{{gameOverMessage}}</h1>
+          <h2>{{gameOverTitle}}</h2>
+          <paper-button id="tryAgainButton" raised class="coloured">Try again</paper-button>
+          <paper-button id="nextLevelButton" raised class="coloured">Next level</paper-button>
+      </core-overlay>
+      
+    </div>
+
+
+  </template>
+
+  <script>
+
+    Polymer({
+
+      stepping: true,
+      stepInterval: 100,
+      gameOverTitle: "Game Over",
+      gameOverMessage: "And this is why",
+
+      ready: function() {
+
+        var self = this;
+
+        // initialise ai from run-control
+        this.$.runControl.selected = 0;
+        this.$.ai.stepping = this.stepping;
+        this.$.ai.stepInterval = this.stepInterval;
+
+
+        // delegate `forward` to game
+        this.$.signals.addEventListener('core-signal-forward', function(event) {
+          var n = event.detail;
+          console.log('split forward ' + n + ' steps');
+          self.$.game.forward(n);
+        });
+
+        // delegate `moveTo` to game
+        this.$.signals.addEventListener('core-signal-move-to',  function(event) {
+          var n = event.detail;
+          console.log('split move to ' + n);
+          self.$.game.moveTo(n);
+        });
+
+        // delegate `no-code` to game
+        this.$.signals.addEventListener('core-signal-no-code', function(event) {
+          var n = event.detail;
+          var g = self.$.game;
+          g.flashMsg("Does the computer have a program?");
+          self.stepping = true;
+        });
+
+        // open progress panel
+        this.$.signals.addEventListener('core-signal-open-progress',  function(event) {
+          self.$.ai.openDrawer();
+        });
+
+        this.$.runControl.addEventListener('run-control-mode-change', function(event) {
+          self.$.ai.stepping = event.detail.stopped;
+          if(!event.detail.stopped && self.$.game.player === 1) {
+            self.run();
+          }
+        });
+
+        this.$.runControl.addEventListener('run-control-speed-change', function(event) {
+          self.$.ai.stepInterval = event.detail.stepInterval;
+        });
+
+        this.$.runControl.addEventListener('run-control-step', function(event) {
+          self.singleStep();
+        });
+
+        this.$.game.addEventListener('computers-turn', function(event) {
+          self.$.runControl.selected = 1;
+          self.$.runControl.stepDisabled = false;
+          self.$.game.startMove();
+          self.job('timer', (function(self) {
+            return self.run;
+          })(self), 1000)
+        });
+
+        this.$.game.addEventListener('players-turn', function(event) {
+          self.$.runControl.selected = 0;
+          self.$.runControl.stepDisabled = true;
+        });
+
+        this.$.ai.addEventListener('start-program', function(event) {
+          self.$.game.startMove();
+        });
+
+        this.$.ai.addEventListener('end-program', function(event) {
+          self.$.game.endProgram();
+        });
+
+        this.$.ai.addEventListener('ai-drawer-changed', (function(event) {
+          if(event.detail === 'drawer') {
+            this.$.runControl.classList.add('hidden');
+          }
+          else {
+            this.$.runControl.classList.remove('hidden');
+          }
+        }).bind(this));
+
+        this.$.game.addEventListener('game-over-dialog', (function(event) {
+          this.gameOverTitle = event.detail.title;
+          this.gameOverMessage = event.detail.message;
+          this.openEndGameDialog();
+        }).bind(this));
+
+        this.$.tryAgainButton.addEventListener('click', (function(event) {
+          this.$.endgameDialog.close();
+          this.$.ai.tryAgain();
+          this.$.game.reset();
+        }).bind(this));
+
+        this.$.nextLevelButton.addEventListener('click', (function(event) {
+          this.$.endgameDialog.close();
+          this.$.ai.nextLevel();
+        }).bind(this));
+
+        this.$.endgameDialog.addEventListener('core-overlay-close-completed', (function(event) {
+          this.$.game.reset();
+        }).bind(this));
+        
+        this.$.ai.addEventListener('ai-maxadd-changed', (function(event) {
+          this.$.game.maxadd = event.detail;
+        }).bind(this));
+
+        this.$.ai.addEventListener('ai-run-mode', (function(event) {
+          var stopped = event.detail;
+          this.$.runControl.stoppedChanged(stopped, !stopped);
+        }).bind(this));
+
+        this.$.ai.addEventListener('ai-run-step', (function(event) {
+          var stepInterval = event.detail;
+          this.$.runControl.stepIntervalChanged(-1, stepInterval);
+        }).bind(this));
+
+        this.$.ai.addEventListener('ai-reset-game', (function(event) {
+          this.$.game.reset();
+        }).bind(this));
+
+        
+      },
+
+      _total: 0,
+      totalChanged: function(oldVal, newVal) {
+          var n = ~~newVal;
+          if(!isNaN(n) && n >= 0 && n <= 100)
+            this._total = n;
+      },
+
+
+      goal: 23,
+      goalChanged: function(oldVal, newVal) {
+        var n = ~~newVal;
+        if(!isNaN(n) && n > 5 && n <= 100)
+          this.goal = n;
+      },
+
+      /**
+       * The `run` method runs the blockly code and returns the current total
+       *
+       * @method run 
+       */
+      run: function() {
+        return this.$.ai.run();
+      },
+
+      /**
+       * The `singleStep` method single-steps the blockly code
+       *
+       * @method step 
+       */
+      singleStep: function() {
+        this.$.ai.singleStep();
+      },
+
+      openEndGameDialog: function() {
+        this.$.endgameDialog.open();
+      },
+
+    });
+
+  </script>
+
+</polymer-element>

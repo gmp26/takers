@@ -1,0 +1,30 @@
+{
+  "name": "run-control",
+  "version": "0.0.0",
+  "authors": [
+    "Anonymous <anonymous@example.com>"
+  ],
+  "description": "Element providing solution to no problem in particular.",
+  "keywords": [
+    "web-component",
+    "web-components",
+    "polymer",
+    "seed"
+  ],
+  "main": "run-control.html",
+  "license": "MIT",
+  "homepage": "https://github.com/<USERNAME>/run-control/",
+  "ignore": [
+    "/.*",
+    "/tests/"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#^0.5.5",
+    "paper-radio-group": "Polymer/paper-radio-group#~0.5.5",
+    "core-selection": "Polymer/core-selection#~0.5.5",
+    "core-selector": "Polymer/core-selector#~0.5.5"
+  },
+  "devDependencies": {
+    "web-component-tester": "Polymer/web-component-tester#^2.0.5"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "takers-split",
+  "version": "0.0.0",
+  "authors": [
+    "Anonymous <anonymous@example.com>"
+  ],
+  "description": "Element providing solution to no problem in particular.",
+  "keywords": [
+    "web-component",
+    "web-components",
+    "polymer",
+    "seed"
+  ],
+  "main": "takers-split.html",
+  "license": "MIT",
+  "homepage": "https://github.com/<USERNAME>/takers-split/",
+  "ignore": [
+    "/.*",
+    "/tests/"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#^0.5.5",
+    "core-scaffold": "Polymer/core-scaffold#~0.5.5",
+    "core-splitter": "Polymer/core-splitter#~0.5.5",
+    "paper-input": "Polymer/paper-input#~0.5.5",
+    "paper-icon-button": "Polymer/paper-icon-button#~0.5.5",
+    "paper-slider": "Polymer/paper-slider#~0.5.5",
+    "core-drag-drop": "Polymer/core-drag-drop#~0.5.5"
+  },
+  "devDependencies": {
+    "web-component-tester": "Polymer/web-component-tester#^2.0.5"
+  }
+}

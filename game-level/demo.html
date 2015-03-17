@@ -1,0 +1,105 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <title>game-level Demo</title>
+
+  <script src="../components/webcomponentsjs/webcomponents.min.js"></script>
+  <link rel="import" href="game-level.html">
+  <link rel="import" href="../components/font-roboto/roboto.html">
+
+  <style>
+      game-level::shadow .level {
+          background-color: rgba(34, 255, 179, 1);
+          width: 60px;
+          height: 60px;
+          border-radius:50px;
+          margin: 20px 20px;
+          font-size: 20px;
+          color: #ffffff;
+      }
+      game-level::shadow .one {
+          background-color: rgb(255, 119, 119);
+      }
+      game-level::shadow .two {
+          background-color: rgb(151, 231, 51);
+      }
+      game-level::shadow .three {
+          background-color: rgb(110, 110, 255);
+      }
+      game-level::shadow .four {
+          background-color: #000000;
+      }
+      game-level::shadow .level .big {
+        height: 40px;
+        width: 40px;
+        color: white;
+      }
+      .help {
+        padding:0px 30px;
+        font-size: 20px;
+      }
+      .marker {
+          height: 20px;
+          width: 20px;
+          display: inline-block;
+          border-radius: 3px;
+          box-shadow: 1px 1px 2px #553333;
+      }
+      .player {
+          background-color: #ffffff;
+      }
+      .computer {
+          background-color: #D4FF28;
+      }
+  </style>
+
+</head>
+
+<body unresolved>
+
+    <h2>game-level example</h2>
+
+    <game-level selector="level one" buttonLabel="Level 1" color="red" iconName="star">
+      <p class="help">
+        The first player to move the red counter to the starred square wins.
+        Tap a <span class="marker player"></span> white square to move the counter there. 
+        Similarly, the computer can play on any <span class="marker computer"></span> green square
+      </p>
+      <p class="help">
+        Can you win?
+      </p>
+    </game-level>
+
+    <game-level selector="level two"  buttonLabel="Level 2" color="blue" iconName="done">
+      <p class="help">
+        It's your turn to program the computer. Can you tell it how to win?
+        Drag blocks into the white panel to assemble your program.
+      </p>
+    </game-level>
+
+    <game-level selector="level three"  buttonLabel="Level 3" color="green" iconName="star">
+      <p class="help">
+        This game will change each time you play it. Can you tell the computer
+        how to win any of these games? 
+      </p>
+    </game-level>
+
+    <game-level selector="level four"  buttonLabel="Level 4" color="orange" iconName="star">
+      <p class="help">
+        This is harder. Can you make a winning computer program with just these
+        blocks?
+      </p>
+    </game-level>
+
+</body>
+</html>

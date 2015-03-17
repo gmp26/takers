@@ -1,0 +1,219 @@
+<link rel="import" href="../components/polymer/polymer.html">
+<link rel="import" href="../components/core-label/core-label.html">
+<link rel="import" href="../components/core-selection/core-selection.html">
+<link rel="import" href="../components/core-selector/core-selector.html">
+<link rel="import" href="../components/paper-radio-group/paper-radio-group.html">
+<link rel="import" href="../components/paper-slider/paper-slider.html">
+
+<!--
+Element providing solution to no problem in particular.
+
+##### Example
+
+    <run-control></run-control>
+
+@element run-control
+@blurb Controls step state and run speed
+@status alpha
+@homepage http://gmp26.github.io/run-control
+-->
+<polymer-element name="run-control" attributes="stopped stepInterval selected stepDisabled">
+
+  <template>
+
+    <style>
+      :host {
+        margin-left: 20px;
+        padding: 5px;
+        width: 200px;
+        border: 1px solid #CCCCCC;
+        border-radius: 5px;
+        background-color: rgba(205, 158, 232, 0.33);
+        color: rgba(255, 255, 255, 0.5);
+        min-height: 90px;
+        -webkit-transition:top .25s;
+        transition:top .25s;
+      }
+      :host #control {
+        width: 100%;
+      }
+      :host .mode {
+        cursor: pointer;   
+      }
+      :host .hide {
+        display: none; 
+      }
+      :host .panel {
+        padding: 5px;
+      }
+      :host .panel.activePanel {
+        background-color: #ffffff;
+        color: rgb(0, 94, 111);
+        border: 5px dotted rgb(0, 94, 111);
+      }
+      :host core-label {
+        cursor: pointer;
+      }
+      :host #stepButton {
+        background-color: rgb(0, 94, 111);;
+        color: #fff;
+      }
+      :host paper-radio-button::shadow #onRadio {
+        background-color: rgb(32, 195, 133);
+      }
+      :host paper-radio-button::shadow #ink {
+        color: rgb(0, 94, 111);
+      }
+      :host paper-radio-button[checked]::shadow #offRadio {
+        border-color: rgb(0, 94, 111);
+      }
+      :host paper-slider::shadow #sliderKnobInner {
+        background-color: rgb(32, 195, 133) !important;
+        border: 2px solid rgb(32, 195, 133) !important;
+      }
+      :host paper-slider /deep/ #sliderBar::shadow #activeProgress {
+        background-color: rgb(32, 195, 133) !important;
+      }
+
+      :host {
+        position: absolute;
+        top: 76px;
+        right: 10px;
+        pointer: move;
+      }
+
+      :host(.hidden) {
+        top: -300px;
+      }
+
+      .panel .title {
+        font-weight: bold;
+      }
+      #panel0 div {
+        padding:10px;
+      }
+        
+    </style>
+
+
+    <core-selector id="selector" selected="{{selected}}" selectedClass="activePanel" notap>
+
+      <div layout vertical center class="panel" id="panel0">
+        <div class="title">{{selected ? "On p" : "P" }}layer's turn</div>
+        <div>Click a white square</div>
+      </div>
+
+      <div layout vertical center class="panel" id="panel1">
+        <div class="title">{{selected ? "C" : "On c"}}omputer's turn</div>
+        <div>
+          <paper-radio-group id="modeSelector" selected="stepping" layout horizontal>
+          <paper-radio-button class="mode" name="stepping" label="Pause" class="blue"></paper-radio-button >
+          <paper-radio-button class="mode" name="running" label="Run" class="blue"></paper-radio-button>
+          </paper-radio-group>
+        </div>
+        <div layout horizontal center id="control">
+          <paper-button id="stepButton" class="step" disabled="{{stepDisabled}}" raised flex>Step</paper-button>
+          <core-label class="run">slow</core-label>
+          <paper-slider id="stepInterval" class="run" min="0" max="{{stepMax}}" value="{{stepMax-stepInterval}}" flex></paper-slider>
+          <core-label class="run">fast</core-label>
+        </div>
+      </div>
+
+    </core-selector>
+
+  </template>
+
+  <script>
+
+    Polymer({
+
+      /**
+       * `stepping` is true when the computer is being stepped
+       *
+       * @property stepping
+       * @type bool
+       * @default false
+       */
+      stopped: true,
+      selected: 0,
+      stepDisabled: true,
+      stepMax: 50,
+      ready: function() {
+        var self = this;
+
+        var showVisibles = function(event) {
+          // Note that the logic here is inverted because the radioGroup appears to delay
+          // setting the selectedIndex until after this eventHandler is called.
+          if(event)
+            self.stopped = (self.$.modeSelector.selectedIndex !== 0);
+          else
+            self.$.modeSelector.selected = self.stopped ? "stepping" : "running";
+
+          var i, r, s;
+          var runners = self.$.control.querySelectorAll(".run")
+          var steppers = self.$.control.querySelectorAll(".step");
+          for(i=0; i < runners.length; i++) {
+            r = runners[i];
+            if(self.stopped)
+              r.classList.add('hide');
+            else 
+              r.classList.remove('hide');
+          };
+          for(i=0; i < steppers.length; i++) {
+            s = steppers[i];
+            if(self.stopped)
+              s.classList.remove('hide');
+            else
+              s.classList.add('hide');
+          };
+        };
+        showVisibles();
+
+        this.$.stepButton.addEventListener('click',  function(event) {
+          self.fire('run-control-step', {});
+        });
+
+        // for programmatic chane
+        this.stoppedChanged = function(oldValue, newValue) {
+          this.stopped = !newValue;
+          this.fire('run-control-mode-change', {
+            stopped: self.stopped,
+            stepInterval: this.stepInterval
+          });
+          showVisibles();
+        };
+
+        this.stepIntervalChanged = function(oldValue, newValue) {
+          this.stepInterval = newValue;
+          this.fire('run-control-speed-change', {
+            stopped: self.stopped,
+            stepInterval: this.stepInterval
+          });
+          showVisibles();
+        };
+
+        this.$.modeSelector.addEventListener('change', function(event) {
+          showVisibles(event);
+          self.fire('run-control-mode-change', {
+            stopped: self.stopped,
+            stepInterval: self.stepInterval
+          });
+        });
+
+        this.$.stepInterval.addEventListener('change',  function(event) {
+          self.stepInterval = self.stepMax-self.$.stepInterval.immediateValue;
+          self.fire('run-control-speed-change', {
+            stopped: self.stopped,
+            stepInterval: self.stepInterval
+          });
+        });
+
+      },
+
+      stepInterval: 0
+
+    });
+
+  </script>
+
+</polymer-element>

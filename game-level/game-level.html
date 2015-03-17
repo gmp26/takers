@@ -1,0 +1,80 @@
+<link rel="import" href="../components/polymer/polymer.html">
+<link rel="import" href="../components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../components/paper-button/paper-button.html">
+<!--
+Element providing solution to no problem in particular.
+
+##### Example
+
+    <game-level></game-level>
+
+@element game-levels
+@blurb Element providing solution to no problem in particular.
+@status alpha
+@homepage http://polymerlabs.github.io/game-levels
+-->
+<polymer-element name="game-level" attributes="buttonLabel selector iconName">
+
+  <template>
+
+    <style>
+      :host {
+        font-family: 'RobotoDraft', sans-serif;
+      }
+
+    </style>
+
+    <content></content>
+<!--     <div layout horizontal end-justified>
+      <paper-button class="{{selector}}" role="button" tabindex="0" on-click="{{play}}" raised>
+        <core-icon class="big" icon="{{iconName}}"></core-icon>
+        {{buttonLabel}}
+      </paper-button>
+    </div> -->
+  </template>
+
+  <script>
+
+    Polymer({
+      /**
+       * The `buttonLabel` of the level
+       *
+       * @attribute buttonLabel
+       * @type string
+       * @default 'Level 1'
+       */
+      buttonLabel: 'Level 1',
+
+      /**
+       * The `selector` for the level. Used to locate CSS class
+       *
+       * @attribute selector
+       * @type string
+       * @default 'level1'
+       */
+      selector: 'level1',
+
+      /**
+       * The `icon` name
+       *
+       * @attribute icon
+       * @type string
+       * @default 'star'
+       */
+      iconName: 'star',
+
+      ready: function() {
+        // Ready is a lifecycle callback.
+        // You can do setup work in here.
+        // More info: http://www.polymer-project.org/docs/polymer/polymer.html#lifecyclemethods
+      },
+
+      play: function(event) {
+        this.fire('game-level-play', this.selector);
+      }
+
+    });
+
+  </script>
+
+</polymer-element>
