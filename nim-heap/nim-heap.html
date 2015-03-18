@@ -1,0 +1,449 @@
+
+<link rel="import" href="../components/polymer/polymer.html">
+<link rel="import" href="../components/core-animation/core-animation.html">
+<link rel="import" href="../components/core-signals/core-signals.html">
+<link rel="import" href="../components/core-icon-button/core-icon-button.html">
+<link rel="import" href="../components/core-overlay/core-overlay.html">
+<link rel="import" href="../components/custom-toast/custom-toast.html">
+<link rel="import" href="../components/paper-button/paper-button.html">
+<link rel="import" href="../components/paper-input/paper-input.html">
+<!--
+Element providing solution to no problem in particular.
+
+##### Example
+
+    <nim-heap></nim-heap>
+
+@element nim-heap
+@blurb Element providing solution to no problem in particular.
+@status alpha
+@homepage http://polymerlabs.github.io/nim-heap
+-->
+<polymer-element name="nim-heap" attributes="notitle author">
+
+  <template>
+
+    <style>
+      :host {
+        display: block;
+        position: relative;
+        height: 100%;
+        width: 100%;
+        font-family: 'RobotoDraft', sans-serif;
+        background-color: rgba(128, 91, 165, 0.24);
+      }
+      :host core-header-panel {
+        position: relative;
+        height: 100vh;
+        width: 100%;
+      }
+      :host core-toolbar {
+        background-color: rgb(128, 91, 165);
+        color: white;
+      }
+      :host .content {
+        padding: 15px;
+        height: calc(100% + 64px);
+      }
+      :host input {
+        width: 60px;
+        font-size:30px;
+        margin-top: 0px;
+      }
+      .box {
+        position: relative;
+      }
+      .box p {
+        color: #D557BB;
+      }
+      .board {
+      }
+      .square {
+        min-width:50px;
+        border-radius: 10px;
+        background-color: #ffffff;
+        vertical-align: middle;
+        text-align: center;
+        font-size: 20px;
+        margin: 2px 0px;
+      }
+      .square::shadow #ripple {
+        color: purple;
+      }
+      .square[disabled] {
+        color: #ffffff;
+        background-color: rgb(51, 190, 208);
+      }
+      .square[computer=true] {
+        opacity: 1;
+        color: #ffffff;
+        border: 1px solid #888888;
+        background-color: #FF7777;
+      }
+      .counter {
+        background-color: rgba(255, 0, 64, 0.7);
+        color: white;
+        box-sizing: border-box;
+        width: 30px;
+        height: 30px;
+        margin: 0px;
+        padding: 0px;
+        position:absolute;
+      //  top: 0px;
+      //  left: 0px;
+        border-radius:15px;
+      }
+      .winner {
+        background-image: url('../images/star.png');
+        background-repeat: no-repeat;
+        background-color: white;
+      }
+      .winner[disabled] {
+        background-color: rgb(106, 79, 239);
+      }
+      .small {
+        //zoom: 0.5;
+        border-radius: 4px;
+        min-width: 20px !important;
+        height: 20px;
+      }
+      #playerFlash {
+        bottom: auto;
+        top: auto;
+      }
+      #computerFlash {
+        right: 10px;
+        left: auto;
+        bottom: auto;
+        top: auto;
+      }
+      #settings {
+        background-color: #ffffff;
+        padding:30px;
+        opacity: 0.8;
+        margin: 30px 0px;
+        border-radius:5px;
+        top: 0px !important;
+        max-width: 600px;
+      }
+      #settings section {
+        display: inline-block;
+        width: 45%;
+      }
+    </style>
+
+    <div id="gameContent" class="content" fit>
+      <div id="gameState" class="box" on-resize="boxResized">
+        <h1>{{playerName(player)}}'s turn</h1>
+        <p>The player to land on the star wins.</p>      
+        <div id="board" class="board">
+          <template repeat="{{ square, i in squares }}">
+            <paper-button id="square{{i}}" number="{{i}}" raised on-click="{{playerMoved}}"
+              disabled="{{ (player == 1) || (i > total+maxadd) || (i <= total) }}"
+              computer="{{ (player == 1) && (i > startTotal) && (i <= startTotal+maxadd) }}"
+              class="square {{ {winner: (i == goal)} | tokenList }}" >
+              {{square}}
+            </paper-button>
+          </template>
+          <paper-shadow id="counter" class="counter" z="1"></paper-shadow>
+        </div>
+      </div>
+
+      <div id="playerTurn">
+
+        <custom-toast id="playerFlash" duration="{{flashPause}}" class="capsule core-transition core-transition-left" text="hello" style="padding-right: 60px; position: fixed; outline: none; z-index: 12; box-sizing: border-box; display: none;" role="status" touch-action="none" tabindex="-1"><paper-button raised computer="false" class="square small" style="width:20px">&nbsp;</paper-button></custom-toast>
+
+        <custom-toast id="computerFlash" duration="{{flashPause}}" class="capsule core-transition core-transition-right" text="hello" style="padding-right: 60px; position: fixed; outline: none; z-index: 12; box-sizing: border-box; display: none;" role="status" touch-action="none" tabindex="-1"><paper-button raised computer="true" class="square small"  style="width:20px">&nbsp;</paper-button></custom-toast>
+
+      </div>
+    </div>
+
+    <core-signals id="signals"></core-signals>
+
+  </template>
+
+  <script>
+
+    Polymer({
+      flashPause: 3000,
+
+      counterPos: function(n) {
+        var s = this.squareAt(n);
+        if(!s) s = this.squareAt(0);
+        var r = {
+          top: s.offsetTop+10+"px",
+          left: s.offsetLeft+10+"px"
+        }
+        return r;
+      },
+
+        
+      maxadd: 4,
+      maxaddChanged: function(oldValue, newValue) {
+        this.maxadd = ~~newValue;
+      },
+
+      player: 0,
+      players: ["Player", "Computer"],
+      moveCount: 0,
+      gameOver: false,
+
+      goal: 23,
+      goalChanged: function(oldValue, value) {
+        this.goal = ~~value;
+        this.setSquares();   
+      },
+
+      startTotal: 0,
+      _total: -1,
+      set total(value) {
+        if(value != this._total) {
+          this.fire('core-signal', {name: 'total', data: value});
+          console.log(value);
+          this._total = ~~value;
+          // var s = this.squareAt(value);
+          // if(s) {
+          //   this.$.counter.style.left = (s.offsetLeft+10)+'px';
+          //   this.$.counter.style.top = (s.offsetTop+10)+'px';
+          // }
+          //var style = this.$.counter.style;
+          var pos = this.counterPos(this._total);
+          this.$.counter.style.left = pos.left;
+          this.$.counter.style.top = pos.top;
+        }
+      },
+      get total() {
+        return this._total;
+      },
+
+      squares: [],
+
+      created: function() {
+        this.setSquares();
+      },
+
+      setSquares: function() {
+        var s = [];
+        for(var i = 0; i <= this.goal; i++) {
+          s[i] = i;
+        }
+        this.squares = s;
+      },
+
+      squareAt: function(squareIndex) {
+        return this.shadowRoot.querySelector('#square'+squareIndex);
+      },
+
+      ready: function() {
+
+        var self = this;
+
+        // respond to flash message signals
+        this.$.signals.addEventListener('core-signal-flash', function(event) {
+          var msg = event.detail;
+          self.flashMsg(msg);
+        });
+
+        this.playerMoved = (function(event) {
+          var n = ~~(event.currentTarget.getAttribute('number'));
+          this.startMove();
+          this.moveTo(n);
+          this.flashMsg("Player moved " + (n - this.startTotal));
+          this.switchPlayer();
+        }).bind(this);
+
+
+      },
+
+      domReady: function() {
+        this.total= 0;
+
+
+        if(!this.squares)
+          this.setSquares();
+
+//         var tbh = this.$.toolbar.clientHeight;
+//         var tbw = this.$.toolbar.clientWidth;
+        var tbh = 0;
+        var tbw = this.$.gameContent.clientWidth;
+//        this.$.chPanel.style.height="auto";
+
+        // setup the counter animation
+        this.animation = new CoreAnimation();
+        this.animation.duration = 1500;
+
+        window.setInterval((function(self) {
+          return function() {
+            // trigger a counter move 
+            self.total = self.total;
+          }}(this)), 10
+        );
+
+      },
+
+      reset: function() {
+        this.total = 0;
+        this.player = 0;
+        this.moveCount = 0;
+        this.gameOver = false;
+      },
+
+      isComputersTurn: function() {
+        return this.player == 1;
+      },
+
+      addsMsg: function(n) {
+        return this.playerName() + " moves " + n;
+      },
+
+      thinkingMsg: function() {
+        return "Computer is thinking...";
+      },
+
+      winMsg: function() {
+        return this.playerName() + " has won";
+      },
+
+      flashMsg: function(msg) {
+        var f = this.player ? this.$.computerFlash : this.$.playerFlash;
+        f.text = msg;
+        var chPanel = this.shadowRoot.querySelector('#chPanel');
+        var mc = chPanel.shadowRoot.querySelector('#mainContainer');
+        var fTop = (parseInt(this.$.counter.style.top) - mc.scrollTop + 400);
+        var tbh = this.$.toolbar.clientHeight;
+        if(fTop + tbh > window.innerHeight) {
+          fTop = window.innerHeight - tbh - tbh;
+        }
+        f.style.top = fTop+"px";
+        f.show();
+      },
+
+
+      playerName: function() {
+        return this.players[this.player];
+      },
+
+      forward: function(n) {
+        if(this.moveValid(n) && !this.gameOver) {
+
+          var c = this.$.counter;
+          // var a = this.animation;
+          // a.target = c;
+          // a.keyframes = [
+          //    this.counterPos(this.total),
+          //    this.counterPos(this.total+n)
+          // ]
+          // a.play();
+          var pos = this.counterPos(this.total+n);
+          c.style.top = pos.top;
+          c.style.left = pos.left;
+
+
+
+          this.updateModel(n);
+          
+          // MOVE THIS CODE. 
+          if(this.endGame(n)) {
+
+            // TODO promote this to takers-split in case of a computer overshoot
+            this.flashMsg(this.winMsg());
+            this.total = this.goal;
+            this.gameOverAlert(this.winMsg());
+          }
+        }
+        else {
+          if(this.player == 1) {
+            this.gameOverAlert("Computer has been disqualified.");
+          }
+          else {
+            alert("you can't move another "+ ((n===1) ? "step" : ("" + n + " steps")));
+          }
+        }
+      },
+
+      // move to the following square
+      moveTo: function(n) {
+        if(n > this.total && n <= this.goal) {
+          this.forward(n - this.total);
+        }
+        else {
+          alert("you can't move to square "+n);
+        }
+      },
+
+      moveValid: function(n) {
+        n = +n;
+        return (n > 0 && n <= this.maxadd - (this.total - this.startTotal));
+      },
+
+      updateModel: function(n) {
+        n = +n;
+        ++this.moveCount;
+        this.total += n;
+      },
+
+      startMove: function() {
+        this.startTotal = this.total;
+      },
+
+      switchPlayer: function() {
+        if(this.gameOver)
+          return;
+        this.player = 1 - this.player;
+        if(this.isComputersTurn()) {
+          this.fireComputerTurn();
+        }
+        else {
+          //this.flashMsg(this.playerName() + "'s move");
+          this.firePlayerTurn();
+        }
+      },
+
+      firePlayerTurn: function() {
+        // show player inputs
+        // hide computer is thinking
+        this.fire('players-turn', {
+            goal: self.goal, 
+            maxadd: self.maxadd, 
+            total: self.total
+          });
+      },
+
+      fireComputerTurn: function() {
+        //this.flashMsg("Computer's turn");
+        this.fire('computers-turn', {
+            goal: self.goal, 
+            maxadd: self.maxadd, 
+            total: self.total
+          });
+      },
+
+      endGame: function(n) {
+        return (this.total >= this.goal);
+      },
+
+      // Computer has finished running its move program
+      endProgram: function() {
+//         if(this.gameOver)
+//           this.reset();
+//         else
+        if(!this.gameOver)
+          this.switchPlayer();
+      },
+
+      showEndGameDialog: function(msg) {
+        this.fire('game-over-dialog', {title: 'Another Game?', message:msg});
+      },
+
+      gameOverAlert: function(msg) {
+        this.gameOver = true;
+        this.job('endGame', this.showEndGameDialog.bind(this, msg), 1000);
+      },
+
+      openProgress: function() {
+        this.fire('core-signal', {name: 'open-progress', data: this});
+      }    });
+
+  </script>
+
+</polymer-element>
