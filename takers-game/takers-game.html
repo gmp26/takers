@@ -70,16 +70,10 @@ Element providing solution to no problem in particular.
 
       <div layout vertical>
         <h1>{{playerName(0)}}'s turn</h1>
-        <nim-heap id="game0" flex one></nim-heap>
-
-        <nim-heap id="game1" flex one></nim-heap>
-
-        <nim-heap id="game2" flex one></nim-heap>
-
-        <nim-heap id="game3" flex one></nim-heap>
+        <template repeat="{{game, i in games}}">
+          <nim-heap  id="game{{i}}" flex one></nim-heap>
+        </template>
       </div>
-      
-
 
     </core-header-panel>
     <core-signals id="signals"></core-signals>
@@ -90,6 +84,17 @@ Element providing solution to no problem in particular.
 
     Polymer({
 
+      games: [{
+        goal: 23,
+        total: 0,
+        maxAdd: 4
+        },
+        {
+        goal: 23,
+        total: 0,
+        maxAdd: 4
+        }
+      ],
 
       _player: 0,
       set player(value) {
