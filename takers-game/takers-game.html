@@ -16,7 +16,6 @@
 <link rel="import" href="../components/core-overlay/core-overlay.html">
 <link rel="import" href="../components/custom-toast/custom-toast.html">
 <link rel="import" href="../components/paper-button/paper-button.html">
-<link rel="import" href="../components/paper-input/paper-input.html">
 <link rel="import" href="../nim-heap/nim-heap.html">
 
 <!--
@@ -58,91 +57,6 @@ Element providing solution to no problem in particular.
         padding: 15px;
         height: calc(100% + 64px);
       }
-      :host input {
-        width: 60px;
-        font-size:30px;
-        margin-top: 0px;
-      }
-      .box {
-        position: relative;
-      }
-      .box p {
-        color: #D557BB;
-      }
-      .board {
-      }
-      .square {
-        min-width:50px;
-        border-radius: 10px;
-        background-color: #ffffff;
-        vertical-align: middle;
-        text-align: center;
-        font-size: 20px;
-        margin: 2px 0px;
-      }
-      .square::shadow #ripple {
-        color: purple;
-      }
-      .square[disabled] {
-        color: #ffffff;
-        background-color: rgb(51, 190, 208);
-      }
-      .square[computer=true] {
-        opacity: 1;
-        color: #ffffff;
-        border: 1px solid #888888;
-        background-color: #FF7777;
-      }
-      .counter {
-        background-color: rgba(255, 0, 64, 0.7);
-        color: white;
-        box-sizing: border-box;
-        width: 30px;
-        height: 30px;
-        margin: 0px;
-        padding: 0px;
-        position:absolute;
-      //  top: 0px;
-      //  left: 0px;
-        border-radius:15px;
-      }
-      .winner {
-        background-image: url('../images/star.png');
-        background-repeat: no-repeat;
-        background-color: white;
-      }
-      .winner[disabled] {
-        background-color: rgb(106, 79, 239);
-      }
-      .small {
-        //zoom: 0.5;
-        border-radius: 4px;
-        min-width: 20px !important;
-        height: 20px;
-      }
-      #playerFlash {
-        bottom: auto;
-        top: auto;
-      }
-      #computerFlash {
-        right: 10px;
-        left: auto;
-        bottom: auto;
-        top: auto;
-      }
-      #settings {
-        background-color: #ffffff;
-        padding:30px;
-        opacity: 0.8;
-        margin: 30px 0px;
-        border-radius:5px;
-        top: 0px !important;
-        max-width: 600px;
-      }
-      #settings section {
-        display: inline-block;
-        width: 45%;
-      }
     </style>
 
     <core-header-panel id="chPanel" mode="waterfall" layout vertical fit>
@@ -154,10 +68,15 @@ Element providing solution to no problem in particular.
         </div>
       </core-toolbar>
 
-      <div layout vertical fit>
+      <div layout vertical>
+        <h1>{{playerName(0)}}'s turn</h1>
         <nim-heap id="game0" flex one></nim-heap>
 
         <nim-heap id="game1" flex one></nim-heap>
+
+        <nim-heap id="game2" flex one></nim-heap>
+
+        <nim-heap id="game3" flex one></nim-heap>
       </div>
       
 
@@ -171,10 +90,70 @@ Element providing solution to no problem in particular.
 
     Polymer({
 
+
+      _player: 0,
+      set player(value) {
+        if(value != this._player) {
+          this.$.game0.player = value;
+          this.$.game1.player = value;
+          this._player = value;
+        }
+      },
+      get player() {
+        return this._player;
+      },
+
+      players: ["Player", "Computer"],
+
+
       reset: function() {
+        this.player = 0;
+        this.moveCount = 0;
+        this.gameOver = false;
+
         this.$.game0.reset();
         this.$.game1.reset();
-      }
+      },
+
+      isComputersTurn: function() {
+        return this.player == 1;
+      },
+
+      chosenGame: 1,
+      chosenMove: 1,
+
+      chooseGame: function() {
+        // TODO: calculate nimsum and decide which game to play.
+        // Also decide how many to move in that game.
+        this.chosenGame = 1;
+        this.chosenMove = 1;
+      },
+
+      startMove: function() {
+        // TODO: Pick one!
+        if(this.isComputersTurn()) {
+          this.chooseGame();
+          this.$.game0.startMove();
+          this.$.game1.startMove();
+        }
+      },
+
+      addsMsg: function(n) {
+        return this.playerName() + " moves " + n;
+      },
+
+      thinkingMsg: function() {
+        return "Computer is thinking...";
+      },
+
+      winMsg: function() {
+        return this.playerName() + " has won";
+      },
+
+      playerName: function() {
+        return this.players[this.player];
+      },
+
     });
 
   </script>

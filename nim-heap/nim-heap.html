@@ -132,9 +132,9 @@ Element providing solution to no problem in particular.
       }
     </style>
 
-    <div id="gameContent" class="content" fit>
+    <div id="gameContent" class="content">
       <div id="gameState" class="box" on-resize="boxResized">
-        <h1>{{playerName(player)}}'s turn</h1>
+        <h1>Game n</h1>
         <p>The player to land on the star wins.</p>      
         <div id="board" class="board">
           <template repeat="{{ square, i in squares }}">
@@ -184,9 +184,14 @@ Element providing solution to no problem in particular.
       },
 
       player: 0,
-      players: ["Player", "Computer"],
       moveCount: 0,
       gameOver: false,
+
+
+      isComputersTurn: function() {
+        return this.player == 1;
+      },
+
 
       goal: 23,
       goalChanged: function(oldValue, value) {
@@ -288,39 +293,13 @@ Element providing solution to no problem in particular.
         this.gameOver = false;
       },
 
-      isComputersTurn: function() {
-        return this.player == 1;
-      },
-
-      addsMsg: function(n) {
-        return this.playerName() + " moves " + n;
-      },
-
-      thinkingMsg: function() {
-        return "Computer is thinking...";
-      },
-
-      winMsg: function() {
-        return this.playerName() + " has won";
-      },
 
       flashMsg: function(msg) {
         var f = this.player ? this.$.computerFlash : this.$.playerFlash;
+        var fTop = this.offsetTop;
         f.text = msg;
-        var chPanel = this.shadowRoot.querySelector('#chPanel');
-        var mc = chPanel.shadowRoot.querySelector('#mainContainer');
-        var fTop = (parseInt(this.$.counter.style.top) - mc.scrollTop + 400);
-        var tbh = this.$.toolbar.clientHeight;
-        if(fTop + tbh > window.innerHeight) {
-          fTop = window.innerHeight - tbh - tbh;
-        }
         f.style.top = fTop+"px";
         f.show();
-      },
-
-
-      playerName: function() {
-        return this.players[this.player];
       },
 
       forward: function(n) {
