@@ -19,7 +19,7 @@ Element providing solution to no problem in particular.
 @status alpha
 @homepage http://polymerlabs.github.io/nim-heap
 -->
-<polymer-element name="nim-heap" attributes="notitle author">
+<polymer-element name="nim-heap" attributes="heap size maxtake">
 
   <template>
 
@@ -139,8 +139,7 @@ Element providing solution to no problem in particular.
         <div id="board" class="board">
           <template repeat="{{ square, i in squares }}">
             <paper-button id="square{{i}}" number="{{i}}" raised on-click="{{playerMoved}}"
-              disabled="{{ (player == 1) || (i > total+maxadd) || (i <= total) }}"
-              computer="{{ (player == 1) && (i > startTotal) && (i <= startTotal+maxadd) }}"
+              disabled="{{(i > total+maxtake) || (i <= total) }}"
               class="square {{ {winner: (i == goal)} | tokenList }}" >
               {{square}}
             </paper-button>
@@ -165,60 +164,21 @@ Element providing solution to no problem in particular.
   <script>
 
     Polymer({
+
+      heap: 0,
+
       flashPause: 3000,
 
-      counterPos: function(n) {
-        var s = this.squareAt(n);
-        if(!s) s = this.squareAt(0);
-        var r = {
-          top: s.offsetTop+10+"px",
-          left: s.offsetLeft+10+"px"
-        }
-        return r;
-      },
-
         
-      maxadd: 4,
-      maxaddChanged: function(oldValue, newValue) {
-        this.maxadd = ~~newValue;
+      maxtake: 4,
+      maxtakeChanged: function(oldValue, newValue) {
+        this.maxtake = ~~newValue;
       },
 
-      player: 0,
-      moveCount: 0,
-      gameOver: false,
-
-
-      isComputersTurn: function() {
-        return this.player == 1;
-      },
-
-
-      goal: 23,
-      goalChanged: function(oldValue, value) {
-        this.goal = ~~value;
+      size: 23,
+      sizeChanged: function(oldValue, value) {
+        this.size = ~~value;
         this.setSquares();   
-      },
-
-      startTotal: 0,
-      _total: -1,
-      set total(value) {
-        if(value != this._total) {
-          this.fire('core-signal', {name: 'total', data: value});
-          console.log(value);
-          this._total = ~~value;
-          // var s = this.squareAt(value);
-          // if(s) {
-          //   this.$.counter.style.left = (s.offsetLeft+10)+'px';
-          //   this.$.counter.style.top = (s.offsetTop+10)+'px';
-          // }
-          //var style = this.$.counter.style;
-          var pos = this.counterPos(this._total);
-          this.$.counter.style.left = pos.left;
-          this.$.counter.style.top = pos.top;
-        }
-      },
-      get total() {
-        return this._total;
       },
 
       squares: [],
@@ -229,7 +189,7 @@ Element providing solution to no problem in particular.
 
       setSquares: function() {
         var s = [];
-        for(var i = 0; i <= this.goal; i++) {
+        for(var i = 0; i <= this.size; i++) {
           s[i] = i;
         }
         this.squares = s;
@@ -243,17 +203,10 @@ Element providing solution to no problem in particular.
 
         var self = this;
 
-        // respond to flash message signals
-        this.$.signals.addEventListener('core-signal-flash', function(event) {
-          var msg = event.detail;
-          self.flashMsg(msg);
-        });
-
         this.playerMoved = (function(event) {
           var n = ~~(event.currentTarget.getAttribute('number'));
           this.startMove();
           this.moveTo(n);
-          this.flashMsg("Player moved " + (n - this.startTotal));
           this.switchPlayer();
         }).bind(this);
 
@@ -267,57 +220,20 @@ Element providing solution to no problem in particular.
         if(!this.squares)
           this.setSquares();
 
-//         var tbh = this.$.toolbar.clientHeight;
-//         var tbw = this.$.toolbar.clientWidth;
         var tbh = 0;
         var tbw = this.$.gameContent.clientWidth;
-//        this.$.chPanel.style.height="auto";
-
-        // setup the counter animation
-        this.animation = new CoreAnimation();
-        this.animation.duration = 1500;
-
-        window.setInterval((function(self) {
-          return function() {
-            // trigger a counter move 
-            self.total = self.total;
-          }}(this)), 10
-        );
 
       },
 
       reset: function() {
         this.total = 0;
-        this.player = 0;
         this.moveCount = 0;
         this.gameOver = false;
       },
 
 
-      flashMsg: function(msg) {
-        var f = this.player ? this.$.computerFlash : this.$.playerFlash;
-        var fTop = this.offsetTop;
-        f.text = msg;
-        f.style.top = fTop+"px";
-        f.show();
-      },
-
       forward: function(n) {
         if(this.moveValid(n) && !this.gameOver) {
-
-          var c = this.$.counter;
-          // var a = this.animation;
-          // a.target = c;
-          // a.keyframes = [
-          //    this.counterPos(this.total),
-          //    this.counterPos(this.total+n)
-          // ]
-          // a.play();
-          var pos = this.counterPos(this.total+n);
-          c.style.top = pos.top;
-          c.style.left = pos.left;
-
-
 
           this.updateModel(n);
           
@@ -328,14 +244,6 @@ Element providing solution to no problem in particular.
             this.flashMsg(this.winMsg());
             this.total = this.goal;
             this.gameOverAlert(this.winMsg());
-          }
-        }
-        else {
-          if(this.player == 1) {
-            this.gameOverAlert("Computer has been disqualified.");
-          }
-          else {
-            alert("you can't move another "+ ((n===1) ? "step" : ("" + n + " steps")));
           }
         }
       },
@@ -352,53 +260,13 @@ Element providing solution to no problem in particular.
 
       moveValid: function(n) {
         n = +n;
-        return (n > 0 && n <= this.maxadd - (this.total - this.startTotal));
+        return (n > 0 && n <= this.maxtake - (this.total - this.startTotal));
       },
 
       updateModel: function(n) {
         n = +n;
         ++this.moveCount;
         this.total += n;
-      },
-
-      startMove: function() {
-        this.startTotal = this.total;
-      },
-
-      switchPlayer: function() {
-        if(this.gameOver)
-          return;
-        this.player = 1 - this.player;
-        if(this.isComputersTurn()) {
-          this.fireComputerTurn();
-        }
-        else {
-          //this.flashMsg(this.playerName() + "'s move");
-          this.firePlayerTurn();
-        }
-      },
-
-      firePlayerTurn: function() {
-        // show player inputs
-        // hide computer is thinking
-        this.fire('players-turn', {
-            goal: self.goal, 
-            maxadd: self.maxadd, 
-            total: self.total
-          });
-      },
-
-      fireComputerTurn: function() {
-        //this.flashMsg("Computer's turn");
-        this.fire('computers-turn', {
-            goal: self.goal, 
-            maxadd: self.maxadd, 
-            total: self.total
-          });
-      },
-
-      endGame: function(n) {
-        return (this.total >= this.goal);
       },
 
       // Computer has finished running its move program

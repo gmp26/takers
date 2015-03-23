@@ -64,14 +64,14 @@ Element providing solution to no problem in particular.
       <core-toolbar id="toolbar" tall justify="between">
         <div>
           <core-icon-button icon="menu" on-tap="{{openProgress}}"></core-icon-button>
-          Got it!
+          Takers
         </div>
       </core-toolbar>
 
       <div layout vertical>
         <h1>{{playerName(0)}}'s turn</h1>
-        <template repeat="{{game, i in games}}">
-          <nim-heap  id="game{{i}}" flex one></nim-heap>
+        <template repeat="{{heap, i in heaps}}">
+          <nim-heap  id="heap{{i}}" heap="{{i}}" size="{{heap.size}}" maxtake="{{heap.maxTake}}" flex one></nim-heap>
         </template>
       </div>
 
@@ -84,23 +84,25 @@ Element providing solution to no problem in particular.
 
     Polymer({
 
-      games: [{
-        goal: 23,
-        total: 0,
-        maxAdd: 4
+      heaps: [{
+          size: 23,
+          maxTake: 4
         },
         {
-        goal: 23,
-        total: 0,
-        maxAdd: 4
-        }
-      ],
+          size: 15,
+          maxTake: 4
+        },
+        {
+          size: 15,
+          maxTake: 4
+        }],
+
+      heapElements: [],
 
       _player: 0,
       set player(value) {
         if(value != this._player) {
-          this.$.game0.player = value;
-          this.$.game1.player = value;
+          this.heapElements.forEach(function(el) {if(el) el.heap1.player = value;})
           this._player = value;
         }
       },
@@ -110,26 +112,33 @@ Element providing solution to no problem in particular.
 
       players: ["Player", "Computer"],
 
+      isComputersTurn: function() {
+        return this.player == 1;
+      },
+
+      ready: function() {
+        var i = 0;
+        var el;
+        while((el = this.$["heap"+i])) 
+          heapElements[i] = el;          
+      },
 
       reset: function() {
         this.player = 0;
         this.moveCount = 0;
         this.gameOver = false;
 
-        this.$.game0.reset();
-        this.$.game1.reset();
+        this.heapElements.forEach(function(el) {if(el) el.reset();})
       },
 
-      isComputersTurn: function() {
-        return this.player == 1;
-      },
 
       chosenGame: 1,
+      chosenGameElement: null,
       chosenMove: 1,
 
       chooseGame: function() {
-        // TODO: calculate nimsum and decide which game to play.
-        // Also decide how many to move in that game.
+        // TODO: calculate nimsum and decide which heap to play.
+        // Also decide how many to take in that heap.
         this.chosenGame = 1;
         this.chosenMove = 1;
       },
@@ -138,10 +147,73 @@ Element providing solution to no problem in particular.
         // TODO: Pick one!
         if(this.isComputersTurn()) {
           this.chooseGame();
-          this.$.game0.startMove();
-          this.$.game1.startMove();
+          var heap = this.heapElements[chosenElement];
+          if(heap)
+            heap.startMove();
         }
       },
+
+      startMove: function() {
+        this.startTotal = this.total;
+      },
+
+      switchPlayer: function() {
+        if(this.gameOver)
+          return;
+        this.player = 1 - this.player;
+        if(this.isComputersTurn()) {
+          this.fireComputerTurn();
+        }
+        else {
+          //this.flashMsg(this.playerName() + "'s move");
+          this.firePlayerTurn();
+        }
+      },
+
+      firePlayerTurn: function() {
+        // show player inputs
+        // hide computer is thinking
+        this.fire('players-turn', {});
+      },
+
+      fireComputerTurn: function() {
+        //this.flashMsg("Computer's turn");
+        this.fire('computers-turn', {});
+      },
+
+      endGame: function(n) {
+        this.
+        return (this.total >= this.goal);
+      },
+
+
+
+
+
+
+      forward: function(n) {
+        console.log("player = "+this.playerName());
+        if(this.player == 0) {
+          var heap = this.heapElements[chosenElement];
+          heap.forward(n);
+        }
+        else {
+          var heap = this.heapElements[chosenElement];
+          heap.forward(n);          
+        }
+      },
+
+
+
+
+      flashMsg: function(msg) {
+        var f = this.player ? this.$.computerFlash : this.$.playerFlash;
+        var fTop = this.offsetTop;
+        f.text = msg;
+        f.style.top = fTop+"px";
+        f.show();
+      },
+
 
       addsMsg: function(n) {
         return this.playerName() + " moves " + n;
