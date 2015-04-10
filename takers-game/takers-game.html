@@ -95,21 +95,12 @@ Element providing solution to no problem in particular.
         {
           size: 15,
           maxTake: 4
-        }],
+        }
+      ],
 
       heapElements: [],
 
       _player: 0,
-      set player(value) {
-        if(value != this._player) {
-          this.heapElements.forEach(function(el) {if(el) el.heap1.player = value;})
-          this._player = value;
-        }
-      },
-      get player() {
-        return this._player;
-      },
-
       players: ["Player", "Computer"],
 
       isComputersTurn: function() {
@@ -119,6 +110,7 @@ Element providing solution to no problem in particular.
       ready: function() {
         var i = 0;
         var el;
+
         while((el = this.$["heap"+i])) 
           heapElements[i] = el;          
       },
@@ -153,10 +145,6 @@ Element providing solution to no problem in particular.
         }
       },
 
-      startMove: function() {
-        this.startTotal = this.total;
-      },
-
       switchPlayer: function() {
         if(this.gameOver)
           return;
@@ -165,32 +153,25 @@ Element providing solution to no problem in particular.
           this.fireComputerTurn();
         }
         else {
-          //this.flashMsg(this.playerName() + "'s move");
           this.firePlayerTurn();
         }
       },
 
       firePlayerTurn: function() {
-        // show player inputs
-        // hide computer is thinking
         this.fire('players-turn', {});
       },
 
       fireComputerTurn: function() {
-        //this.flashMsg("Computer's turn");
         this.fire('computers-turn', {});
       },
 
       endGame: function(n) {
-        this.
-        return (this.total >= this.goal);
+        return !this.heaps || this.heaps.length === 0
+          || this.heaps.every( function(heap) {
+            return !heap || heap.size === 0;
+          })
       },
-
-
-
-
-
-
+      
       forward: function(n) {
         console.log("player = "+this.playerName());
         if(this.player == 0) {
@@ -203,9 +184,6 @@ Element providing solution to no problem in particular.
         }
       },
 
-
-
-
       flashMsg: function(msg) {
         var f = this.player ? this.$.computerFlash : this.$.playerFlash;
         var fTop = this.offsetTop;
@@ -214,13 +192,8 @@ Element providing solution to no problem in particular.
         f.show();
       },
 
-
       addsMsg: function(n) {
         return this.playerName() + " moves " + n;
-      },
-
-      thinkingMsg: function() {
-        return "Computer is thinking...";
       },
 
       winMsg: function() {
