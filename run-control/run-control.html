@@ -75,12 +75,7 @@ Element providing solution to no problem in particular.
         background-color: rgb(32, 195, 133) !important;
       }
 
-      :host {
-        position: absolute;
-        top: 76px;
-        right: 10px;
-        pointer: move;
-      }
+
 
       :host(.hidden) {
         top: -300px;
@@ -95,8 +90,7 @@ Element providing solution to no problem in particular.
         
     </style>
 
-
-    <core-selector id="selector" selected="{{selected}}" selectedClass="activePanel" notap>
+    <core-selector id="selector" selected="{{selected}}" selectedClass="activePanel" notap >
 
       <div layout vertical center class="panel" id="panel0">
         <div class="title">{{selected ? "On p" : "P" }}layer's turn</div>

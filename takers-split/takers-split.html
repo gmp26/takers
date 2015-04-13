@@ -77,6 +77,13 @@ Element providing solution to no problem in particular.
         position: relative;
       }
       
+      :host #runControl {
+        position: absolute;
+        top: 76px;
+        right: 10px;
+        pointer: move;
+      }
+
       .dialog {
         box-sizing: border-box;
         -moz-box-sizing: border-box;
@@ -109,7 +116,8 @@ Element providing solution to no problem in particular.
       <run-control id="runControl" 
         stopped="{{stepping}}" 
         stepInterval="{{stepInterval}}"
-        selected="0">
+        selected="0"
+        >
       </run-control>
 
       <core-overlay id="endgameDialog" class="dialog" backdrop opened="false">
@@ -169,6 +177,26 @@ Element providing solution to no problem in particular.
         this.$.signals.addEventListener('core-signal-open-progress',  function(event) {
           self.$.ai.openDrawer();
         });
+
+        this.$.runControl.addEventListener('mousedown', function(event) {
+            self.rcStartDrag(event);
+            //console.log("rcStartDrag")
+        });
+
+        this.$.runControl.addEventListener('mousemove', function(event) {
+            self.rcMove(event);
+        });
+        
+        this.$.runControl.addEventListener('mouseup', function(event) {
+            self.rcStopDrag(event);
+            //console.log("rcStopDrag")
+        });
+        
+        this.$.runControl.addEventListener('mouseout', function(event) {
+            self.rcStopDrag(event);
+            //console.log("rcStopDrag")
+        });
+        
 
         this.$.runControl.addEventListener('run-control-mode-change', function(event) {
           self.$.ai.stepping = event.detail.stopped;
@@ -294,6 +322,33 @@ Element providing solution to no problem in particular.
       openEndGameDialog: function() {
         this.$.endgameDialog.open();
       },
+
+      /* dragging the runcontrol */
+      rcX0: null,
+      rcY0: null,
+      rcDragging: false,
+      rc: null,
+      rcStartDrag: function(event) {
+        this.rc = this.$.runControl;
+        if(this.rcX0 == null) {
+            this.rcX0 = event.clientX;
+            this.rcY0 = event.clientY;
+        }
+        this.rcDragging = true;
+      },
+
+      rcMove: function(event) {
+        if(this.rcDragging) {
+          var dx = event.clientX - this.rcX0;
+          var dy = event.clientY - this.rcY0;
+          this.rc.style.transform = 'translate('+dx+'px,'+dy+'px)';
+        }
+      },
+
+      rcStopDrag: function(event) {
+        this.rcDragging = false;
+      },
+
 
     });
 
